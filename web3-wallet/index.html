@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Web3 Wallet</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Simple Web3 Wallet</h1>
+  </header>
+
+  <main>
+    <button id="connectButton">Connect Wallet</button>
+    <div id="walletInfo" class="hidden">
+      <p>Address: <span id="address"></span></p>
+      <p>Balance: <span id="balance"></span> ETH</p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
