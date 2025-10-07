@@ -502,6 +502,7 @@
         display: block;
         background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08), transparent 65%),
           linear-gradient(160deg, rgba(17, 24, 39, 0.96), rgba(30, 41, 59, 0.94));
+        touch-action: none;
       }
 
       .slots {
@@ -1057,8 +1058,10 @@
       }
 
       function spawnBall(x = width / 2, power = state.dropPower) {
+        const safeMargin = ballRadius + 4;
+        const clampedX = Math.max(safeMargin, Math.min(width - safeMargin, x));
         balls.push({
-          x,
+          x: clampedX,
           y: 60,
           vx: (Math.random() - 0.5) * 1.4,
           vy: 1,
@@ -1068,6 +1071,11 @@
         missions[0].progress = Math.min(missions[0].progress + 1, missions[0].goal);
         updateMissionUI();
         updateBallCounter();
+      }
+
+      function manualDrop(x = width / 2 + (Math.random() - 0.5) * 80) {
+        spawnBall(x);
+        state.lastDrop = performance.now();
       }
 
       function mergeTopBalls() {
@@ -1423,23 +1431,44 @@
         requestAnimationFrame(loop);
       }
 
-      document.getElementById('dropButton').addEventListener('click', () => {
-        spawnBall(width / 2 + (Math.random() - 0.5) * 80);
-        state.lastDrop = performance.now();
+      const dropButton = document.getElementById('dropButton');
+      const mergeButton = document.getElementById('mergeButton');
+      const autoToggle = document.getElementById('autoToggle');
+
+      dropButton.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        manualDrop();
       });
 
-      document.getElementById('mergeButton').addEventListener('click', () => {
+      dropButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          manualDrop();
+        }
+      });
+
+      mergeButton.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
         mergeTopBalls();
       });
 
-      canvas.addEventListener('click', (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * width;
-        spawnBall(x);
-        state.lastDrop = performance.now();
+      mergeButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          mergeTopBalls();
+        }
       });
 
-      document.getElementById('autoToggle').addEventListener('change', (event) => {
+      canvas.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * width;
+        manualDrop(x);
+      });
+
+      canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+
+      autoToggle.addEventListener('change', (event) => {
         state.autoDrop = event.target.checked;
       });
 
@@ -1454,6 +1483,7 @@
       updateMissionUI();
       updateScoreUI();
       buildPegs();
+      state.lastDrop = performance.now() - state.autoDropInterval;
       requestAnimationFrame(loop);
     </script>
   </body>
