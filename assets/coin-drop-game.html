@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Coin Drop Deluxe</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap");
+
+      :root {
+        color-scheme: dark;
+        font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+        --bg-1: #09051a;
+        --bg-2: #120a2e;
+        --bg-3: #1b103e;
+        --accent: #f97316;
+        --accent-soft: rgba(249, 115, 22, 0.24);
+        --primary: #a855f7;
+        --primary-strong: #c084fc;
+        --primary-soft: rgba(168, 85, 247, 0.2);
+        --card: rgba(255, 255, 255, 0.06);
+        --card-strong: rgba(255, 255, 255, 0.1);
+        --border: rgba(255, 255, 255, 0.08);
+        --text-dim: rgba(255, 255, 255, 0.6);
+        --text-soft: rgba(255, 255, 255, 0.44);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 20% 20%, rgba(148, 163, 255, 0.25), transparent 55%),
+          radial-gradient(circle at 80% 0%, rgba(244, 114, 182, 0.25), transparent 45%),
+          radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.18), transparent 40%),
+          linear-gradient(160deg, var(--bg-1), var(--bg-2));
+        color: #fff;
+        padding: 48px clamp(16px, 4vw, 48px);
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 0);
+        background-size: 40px 40px;
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .scene {
+        width: min(1200px, 100%);
+        display: flex;
+        justify-content: center;
+      }
+
+      .frame {
+        width: 100%;
+        backdrop-filter: blur(20px);
+        background: linear-gradient(135deg, rgba(17, 12, 40, 0.9), rgba(13, 8, 32, 0.82));
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 40px 120px rgba(12, 8, 32, 0.65);
+        padding: clamp(24px, 3vw, 36px);
+        display: flex;
+        flex-direction: column;
+        gap: clamp(20px, 3vw, 32px);
+      }
+
+      .top-bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr);
+        align-items: center;
+        gap: clamp(16px, 3vw, 32px);
+      }
+
+      .profile-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        background: var(--card);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .profile-card::after {
+        content: "";
+        position: absolute;
+        inset: -120px;
+        background: radial-gradient(circle at 30% 40%, rgba(168, 85, 247, 0.28), transparent 60%);
+        z-index: 0;
+      }
+
+      .profile-avatar {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        background: linear-gradient(145deg, rgba(168, 85, 247, 0.8), rgba(236, 72, 153, 0.8));
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 20px;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 14px 24px rgba(168, 85, 247, 0.35);
+      }
+
+      .profile-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 1;
+      }
+
+      .label {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+      }
+
+      .level-track {
+        width: clamp(180px, 28vw, 260px);
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .level-progress {
+        position: absolute;
+        inset: 0;
+        width: 32%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(244, 114, 182, 0.9), rgba(168, 85, 247, 0.9));
+        box-shadow: 0 0 16px rgba(168, 85, 247, 0.6);
+      }
+
+      .level-meta {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        font-weight: 600;
+      }
+
+      .level-meta span {
+        color: var(--text-dim);
+        font-size: 13px;
+      }
+
+      .level-meta strong {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .summary-card {
+        padding: 18px 24px;
+        border-radius: 22px;
+        background: linear-gradient(140deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: relative;
+      }
+
+      .summary-card::after {
+        content: "";
+        position: absolute;
+        inset: -60%;
+        background: radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.18), transparent 70%);
+        z-index: 0;
+      }
+
+      .summary-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--text-soft);
+        text-transform: uppercase;
+        position: relative;
+        z-index: 1;
+      }
+
+      .summary-value {
+        font-size: clamp(26px, 3vw, 32px);
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 0.01em;
+        position: relative;
+        z-index: 1;
+      }
+
+      .top-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 14px;
+      }
+
+      .chip {
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(168, 85, 247, 0.22);
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        color: #f5f3ff;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .chip::before {
+        content: "⚡";
+      }
+
+      .icon-button {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        position: relative;
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+
+      .icon-button::before,
+      .icon-button::after,
+      .icon-button span {
+        content: "";
+        width: 18px;
+        height: 2px;
+        background: #fff;
+        border-radius: 999px;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+
+      .icon-button span {
+        position: relative;
+        display: block;
+      }
+
+      .icon-button::before {
+        position: absolute;
+        top: 16px;
+      }
+
+      .icon-button::after {
+        position: absolute;
+        bottom: 16px;
+      }
+
+      .icon-button:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.9fr) minmax(380px, 1.1fr) minmax(220px, 0.9fr);
+        gap: clamp(16px, 3vw, 32px);
+      }
+
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .card {
+        background: linear-gradient(150deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: -120px;
+        background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.12), transparent 70%);
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .card-title {
+        font-size: 15px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-dim);
+      }
+
+      .mission-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .mission-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(17, 24, 39, 0.38);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .mission-item.completed {
+        background: rgba(59, 130, 246, 0.28);
+        border-color: rgba(59, 130, 246, 0.42);
+      }
+
+      .mission-item.completed .mission-progress {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .mission-name {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .mission-progress {
+        font-size: 13px;
+        color: var(--text-soft);
+      }
+
+      .collection-card {
+        gap: 12px;
+      }
+
+      .collection-card .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 14px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .tag {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(96, 165, 250, 0.22);
+        border: 1px solid rgba(96, 165, 250, 0.5);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .chest {
+        position: relative;
+        z-index: 1;
+        border-radius: 18px;
+        padding: 18px;
+        background: linear-gradient(145deg, rgba(253, 224, 71, 0.22), rgba(250, 204, 21, 0.08));
+        border: 1px solid rgba(253, 224, 71, 0.45);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .chest::before {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border-radius: 14px;
+        border: 1px dashed rgba(253, 224, 71, 0.5);
+        opacity: 0.5;
+      }
+
+      .chest-icon {
+        font-size: 36px;
+        align-self: flex-start;
+      }
+
+      .chest-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+      }
+
+      .playfield {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .board-shell {
+        background: linear-gradient(160deg, rgba(13, 8, 32, 0.9), rgba(32, 21, 63, 0.92));
+        border-radius: 28px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 22px 60px rgba(13, 8, 32, 0.6);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .board-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 4px;
+      }
+
+      .board-header .small-label {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+      }
+
+      .switch {
+        position: relative;
+        width: 54px;
+        height: 28px;
+      }
+
+      .switch input {
+        display: none;
+      }
+
+      .switch-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+      }
+
+      .switch-track {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        transition: background 0.2s ease;
+      }
+
+      .switch-thumb {
+        position: absolute;
+        top: 3px;
+        left: 4px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.22);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .switch input:checked + .switch-track {
+        background: rgba(96, 165, 250, 0.45);
+      }
+
+      .switch input:checked + .switch-track + .switch-thumb {
+        transform: translateX(26px);
+        background: linear-gradient(145deg, #60a5fa, #38bdf8);
+      }
+
+      canvas {
+        width: min(420px, 100%);
+        height: 620px;
+        border-radius: 24px;
+        display: block;
+        background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08), transparent 65%),
+          linear-gradient(160deg, rgba(17, 24, 39, 0.96), rgba(30, 41, 59, 0.94));
+        touch-action: none;
+      }
+
+      .slots {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .slot {
+        padding: 12px 10px 14px;
+        border-radius: 18px;
+        background: linear-gradient(145deg, rgba(252, 211, 77, 0.32), rgba(250, 204, 21, 0.12));
+        border: 1px solid rgba(253, 224, 71, 0.42);
+        text-align: center;
+        box-shadow: 0 12px 24px rgba(234, 179, 8, 0.16);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-weight: 700;
+      }
+
+      .slot:nth-child(odd) {
+        background: linear-gradient(145deg, rgba(251, 191, 36, 0.42), rgba(245, 158, 11, 0.18));
+        border-color: rgba(251, 191, 36, 0.5);
+      }
+
+      .slot-multiplier {
+        font-size: 22px;
+        letter-spacing: 0.06em;
+      }
+
+      .slot-label {
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        color: rgba(0, 0, 0, 0.5);
+        text-transform: uppercase;
+      }
+
+      .control-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 20px;
+        border-radius: 24px;
+        background: linear-gradient(150deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .control-row:first-child {
+        justify-content: space-between;
+      }
+
+      .primary,
+      .secondary {
+        border: none;
+        border-radius: 18px;
+        padding: 16px 26px;
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .primary {
+        flex: 1;
+        color: #0b0616;
+        background: linear-gradient(145deg, #fcd34d, #f97316);
+        box-shadow: 0 12px 24px rgba(234, 179, 8, 0.28);
+      }
+
+      .primary:active {
+        transform: translateY(1px);
+        box-shadow: 0 8px 16px rgba(234, 179, 8, 0.24);
+      }
+
+      .secondary {
+        padding: 16px 22px;
+        background: rgba(168, 85, 247, 0.18);
+        color: #f3e8ff;
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        box-shadow: 0 12px 24px rgba(168, 85, 247, 0.18);
+      }
+
+      .secondary:active {
+        transform: translateY(1px);
+      }
+
+      .slider-row {
+        justify-content: space-between;
+      }
+
+      .slider-row span {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .slider {
+        flex: 1;
+        position: relative;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+      }
+
+      .slider input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        background: transparent;
+        position: absolute;
+        inset: 0;
+      }
+
+      .slider input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #38bdf8, #0ea5e9);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 10px 20px rgba(56, 189, 248, 0.35);
+        cursor: pointer;
+      }
+
+      .slider input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #38bdf8, #0ea5e9);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 10px 20px rgba(56, 189, 248, 0.35);
+        cursor: pointer;
+      }
+
+      .slider-fill {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.8), rgba(168, 85, 247, 0.8));
+        border-radius: inherit;
+        transform-origin: left center;
+        pointer-events: none;
+      }
+
+      .power-row {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+
+      .row-label {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .chip-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .chip-button {
+        padding: 10px 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, border 0.15s ease, transform 0.15s ease;
+      }
+
+      .chip-button.active {
+        background: rgba(236, 72, 153, 0.3);
+        border-color: rgba(236, 72, 153, 0.65);
+        box-shadow: 0 10px 20px rgba(236, 72, 153, 0.28);
+        transform: translateY(-1px);
+      }
+
+      .income-card {
+        gap: 18px;
+      }
+
+      .payout-line {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 600;
+        font-size: 15px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .payout-history {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.35);
+        font-size: 13px;
+      }
+
+      .history-item strong {
+        font-size: 15px;
+        color: #fcd34d;
+        letter-spacing: 0.02em;
+      }
+
+      .booster-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .booster {
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(34, 197, 94, 0.16);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: #bbf7d0;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .booster:nth-child(2) {
+        background: rgba(56, 189, 248, 0.16);
+        border-color: rgba(56, 189, 248, 0.4);
+        color: #bae6fd;
+      }
+
+      .booster:nth-child(3) {
+        background: rgba(236, 72, 153, 0.18);
+        border-color: rgba(236, 72, 153, 0.48);
+        color: #fbcfe8;
+      }
+
+      .booster:active {
+        transform: translateY(1px);
+      }
+
+      .booster span:last-child {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.75);
+      }
+
+      .value-text {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .coin-pop {
+        position: absolute;
+        pointer-events: none;
+        font-weight: 700;
+        color: #fcd34d;
+        text-shadow: 0 6px 16px rgba(250, 204, 21, 0.48);
+        opacity: 0;
+        transform: translateY(0);
+        animation: floatUp 0.8s ease-out forwards;
+      }
+
+      @keyframes floatUp {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, 10px);
+        }
+        20% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -40px);
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .top-bar {
+          grid-template-columns: 1fr;
+        }
+
+        .top-actions {
+          justify-content: flex-start;
+        }
+
+        .content {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          flex-direction: row;
+          overflow-x: auto;
+        }
+
+        .panel .card {
+          min-width: 260px;
+          flex: 1;
+        }
+
+        .playfield {
+          order: -1;
+        }
+      }
+
+      @media (max-width: 720px) {
+        body {
+          padding: 24px 12px 64px;
+        }
+
+        .frame {
+          padding: 20px 16px 28px;
+        }
+
+        .panel {
+          flex-direction: column;
+        }
+
+        canvas {
+          height: 520px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene">
+      <div class="frame">
+        <header class="top-bar">
+          <div class="profile-card">
+            <div class="profile-avatar">LV</div>
+            <div class="profile-info">
+              <span class="label">Текущий уровень</span>
+              <div class="level-track">
+                <div class="level-progress" id="levelProgress"></div>
+              </div>
+              <div class="level-meta">
+                <strong id="levelValue">12</strong>
+                <span><span id="xpValue">38</span>/<span id="xpTarget">60</span> XP</span>
+              </div>
+            </div>
+          </div>
+          <div class="summary">
+            <div class="summary-card">
+              <span class="summary-label">Баланс</span>
+              <span class="summary-value" id="balanceLarge">$0</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Доход / мин</span>
+              <span class="summary-value" id="incomeValue">$120</span>
+            </div>
+          </div>
+          <div class="top-actions">
+            <div class="chip">BOOST x2 · 02:14</div>
+            <button class="icon-button" aria-label="Меню">
+              <span></span>
+            </button>
+          </div>
+        </header>
+
+        <div class="content">
+          <aside class="panel panel-left">
+            <div class="card mission-card">
+              <div class="card-title">Ежедневные задания</div>
+              <ul class="mission-list" id="missionList"></ul>
+            </div>
+            <div class="card collection-card">
+              <div class="card-header">
+                <span>Серия наград</span>
+                <span class="tag" id="streakTag">2/5</span>
+              </div>
+              <div class="chest">
+                <div class="chest-icon">🗝️</div>
+                <div class="chest-info">
+                  <span>Соберите ещё <strong id="streakRemaining">3</strong></span>
+                  <span class="value-text">+750$</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <section class="playfield">
+            <div class="board-shell">
+              <div class="board-header">
+                <div class="switch-label">
+                  <span class="small-label">Авто-дроп</span>
+                  <label class="switch">
+                    <input type="checkbox" id="autoToggle" checked />
+                    <span class="switch-track"></span>
+                    <span class="switch-thumb"></span>
+                  </label>
+                </div>
+                <div>
+                  <span class="small-label">Мячи</span>
+                  <div class="summary-value" id="ballCounter" style="font-size: 20px;">0</div>
+                </div>
+              </div>
+              <canvas id="board" width="360" height="600"></canvas>
+              <div class="slots" id="slotLabels"></div>
+            </div>
+
+            <div class="control-panel">
+              <div class="control-row">
+                <button class="primary" id="dropButton">Сбросить шар</button>
+                <button class="secondary" id="mergeButton">Слить</button>
+              </div>
+              <div class="control-row slider-row">
+                <span>Скорость</span>
+                <div class="slider">
+                  <div class="slider-fill" id="speedFill"></div>
+                  <input type="range" id="speedRange" min="0.6" max="1.6" step="0.1" value="1" />
+                </div>
+                <span class="value-text" id="speedValue">1.0x</span>
+              </div>
+              <div class="control-row power-row">
+                <span class="row-label">Мощность шара</span>
+                <div class="chip-group" id="powerChips"></div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="panel panel-right">
+            <div class="card income-card">
+              <div class="card-title">Последние выплаты</div>
+              <div class="payout-line">
+                <span>Последняя</span>
+                <span id="lastPayout">$0</span>
+              </div>
+              <div class="payout-history" id="payoutHistory"></div>
+            </div>
+            <div class="card booster-card">
+              <div class="card-title">Бустеры</div>
+              <div class="booster-list">
+                <button class="booster" data-boost="income">
+                  <span>+50% доход · 5 мин</span>
+                  <span>8 000$</span>
+                </button>
+                <button class="booster" data-boost="speed">
+                  <span>Ускорение x2 · 90 сек</span>
+                  <span>Видео</span>
+                </button>
+                <button class="booster" data-boost="power">
+                  <span>Энергия x3 · 30 сек</span>
+                  <span>Купить</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById('board');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+
+      const missions = [
+        { id: 'drops', title: 'Сбросьте 15 шаров', progress: 0, goal: 15 },
+        { id: 'earn', title: 'Заработайте $1500', progress: 0, goal: 1500 },
+        { id: 'merge', title: 'Сделайте 5 слияний', progress: 0, goal: 5 },
+      ];
+
+      const slotConfig = [
+        { label: 'JACKPOT', multiplier: 12 },
+        { label: 'MEGA', multiplier: 6 },
+        { label: 'ULTRA', multiplier: 6 },
+        { label: 'JACKPOT', multiplier: 12 },
+      ];
+
+      const powerOptions = [1, 2, 4, 8];
+
+      const state = {
+        score: 0,
+        level: 12,
+        xp: 38,
+        xpTarget: 60,
+        autoDrop: true,
+        dropPower: powerOptions[0],
+        dropSpeed: 1,
+        lastDrop: 0,
+        autoDropInterval: 1500,
+        baseIncomePerMinute: 640,
+        payouts: [],
+        mergeCount: 0,
+      };
+
+      const pegs = [];
+      const balls = [];
+      const floatingTexts = [];
+
+      const gravity = 0.22;
+      const pegRadius = 8;
+      const ballRadius = 11;
+      const damping = 0.78;
+
+      function roundRectPath(context, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + w - radius, y);
+        context.quadraticCurveTo(x + w, y, x + w, y + radius);
+        context.lineTo(x + w, y + h - radius);
+        context.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        context.lineTo(x + radius, y + h);
+        context.quadraticCurveTo(x, y + h, x, y + h - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      function buildPegs() {
+        pegs.length = 0;
+        const rows = 9;
+        const cols = 9;
+        const startY = 120;
+        const spacingY = 52;
+        const spacingX = 36;
+        const offsetX = width / 2 - ((cols - 1) * spacingX) / 2;
+
+        for (let row = 0; row < rows; row++) {
+          const y = startY + row * spacingY;
+          for (let col = 0; col < cols; col++) {
+            const xOffset = row % 2 === 0 ? 0 : spacingX / 2;
+            const x = offsetX + col * spacingX + xOffset;
+            if (x > 40 && x < width - 40) {
+              pegs.push({ x, y });
+            }
+          }
+        }
+      }
+
+      function spawnBall(x = width / 2, power = state.dropPower) {
+        const safeMargin = ballRadius + 4;
+        const clampedX = Math.max(safeMargin, Math.min(width - safeMargin, x));
+        balls.push({
+          x: clampedX,
+          y: 60,
+          vx: (Math.random() - 0.5) * 1.4,
+          vy: 1,
+          power,
+          hue: 260 + Math.random() * 60,
+        });
+        missions[0].progress = Math.min(missions[0].progress + 1, missions[0].goal);
+        updateMissionUI();
+        updateBallCounter();
+      }
+
+      function manualDrop(x = width / 2 + (Math.random() - 0.5) * 80) {
+        spawnBall(x);
+        state.lastDrop = performance.now();
+      }
+
+      function mergeTopBalls() {
+        if (balls.length < 2) return;
+        balls.sort((a, b) => b.power - a.power);
+        const [primary, secondary] = balls;
+        primary.power += secondary.power;
+        balls.splice(1, 1);
+        state.mergeCount += 1;
+        missions[2].progress = Math.min(state.mergeCount, missions[2].goal);
+        pushPayout(primary.power * 15, primary.x, primary.y);
+        updateMissionUI();
+        updateBallCounter();
+      }
+
+      function pushPayout(amount, x, y) {
+        state.score += amount;
+        missions[1].progress = Math.min(missions[1].progress + amount, missions[1].goal);
+        state.payouts.unshift({ amount, timestamp: Date.now() });
+        if (state.payouts.length > 6) state.payouts.pop();
+        updateScoreUI();
+        updateMissionUI();
+        spawnFloatingText(amount, x, y);
+      }
+
+      function spawnFloatingText(amount, x, y) {
+        floatingTexts.push({
+          text: `+$${amount.toLocaleString('ru-RU')}`,
+          x,
+          y,
+          life: 60,
+        });
+      }
+
+      function updateBallCounter() {
+        document.getElementById('ballCounter').textContent = balls.length;
+      }
+
+      function updateScoreUI() {
+        const balanceLarge = document.getElementById('balanceLarge');
+        balanceLarge.textContent = `$${state.score.toLocaleString('ru-RU')}`;
+        document.getElementById('lastPayout').textContent =
+          state.payouts.length > 0
+            ? `$${state.payouts[0].amount.toLocaleString('ru-RU')}`
+            : '$0';
+        const history = document.getElementById('payoutHistory');
+        history.innerHTML = '';
+        state.payouts.forEach((payout, index) => {
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          const secondsAgo = Math.floor((Date.now() - payout.timestamp) / 1000);
+          item.innerHTML = `<span>${index + 1} место · ${secondsAgo}s назад</span><strong>+$${payout.amount.toLocaleString('ru-RU')}</strong>`;
+          history.appendChild(item);
+        });
+        updateLevel();
+      }
+
+      function updateLevel() {
+        const levelProgressEl = document.getElementById('levelProgress');
+        const xpValue = document.getElementById('xpValue');
+        const xpTarget = document.getElementById('xpTarget');
+        const levelValue = document.getElementById('levelValue');
+
+        while (state.xp >= state.xpTarget) {
+          state.xp -= state.xpTarget;
+          state.level += 1;
+          state.xpTarget = Math.round(state.xpTarget * 1.2 + 10);
+        }
+
+        levelValue.textContent = state.level;
+        xpValue.textContent = state.xp;
+        xpTarget.textContent = state.xpTarget;
+        const progress = Math.min(1, state.xp / state.xpTarget);
+        levelProgressEl.style.width = `${progress * 100}%`;
+      }
+
+      function updateMissionUI() {
+        const missionList = document.getElementById('missionList');
+        missionList.innerHTML = '';
+        missions.forEach((mission) => {
+          const li = document.createElement('li');
+          li.className = 'mission-item';
+          const completed = mission.progress >= mission.goal;
+          if (completed) {
+            li.classList.add('completed');
+          }
+          const progressText =
+            mission.id === 'earn'
+              ? `$${Math.min(mission.progress, mission.goal).toLocaleString('ru-RU')} / $${mission.goal.toLocaleString('ru-RU')}`
+              : `${Math.min(mission.progress, mission.goal)} / ${mission.goal}`;
+          li.innerHTML = `
+            <div class="mission-name">${mission.title}</div>
+            <div class="mission-progress">${progressText}</div>
+          `;
+          missionList.appendChild(li);
+        });
+
+        const completed = missions.filter((mission) => mission.progress >= mission.goal).length;
+        const streakTag = document.getElementById('streakTag');
+        const streakRemaining = document.getElementById('streakRemaining');
+        streakTag.textContent = `${completed}/${missions.length}`;
+        streakRemaining.textContent = Math.max(0, missions.length - completed);
+      }
+
+      function updateSlotLabels() {
+        const slotContainer = document.getElementById('slotLabels');
+        slotContainer.innerHTML = '';
+        slotConfig.forEach((slot) => {
+          const div = document.createElement('div');
+          div.className = 'slot';
+          div.innerHTML = `
+            <span class="slot-multiplier">x${slot.multiplier}</span>
+            <span class="slot-label">${slot.label}</span>
+          `;
+          slotContainer.appendChild(div);
+        });
+      }
+
+      function updatePowerChips() {
+        const container = document.getElementById('powerChips');
+        container.innerHTML = '';
+        powerOptions.forEach((power) => {
+          const button = document.createElement('button');
+          button.className = 'chip-button';
+          button.textContent = `x${power}`;
+          if (power === state.dropPower) {
+            button.classList.add('active');
+          }
+          button.addEventListener('click', () => {
+            state.dropPower = power;
+            updatePowerChips();
+          });
+          container.appendChild(button);
+        });
+      }
+
+      function updateSpeed(value) {
+        const multiplier = Number(value);
+        state.dropSpeed = multiplier;
+        document.getElementById('speedValue').textContent = `${multiplier.toFixed(1)}x`;
+        const ratio = (multiplier - 0.6) / (1.6 - 0.6);
+        document.getElementById('speedFill').style.transform = `scaleX(${Math.max(0.08, ratio)})`;
+        const incomeValue = document.getElementById('incomeValue');
+        const income = Math.round(state.baseIncomePerMinute * state.dropSpeed);
+        incomeValue.textContent = `$${income.toLocaleString('ru-RU')}`;
+      }
+
+      function handleSlotCollision(ball) {
+        const slotWidth = width / slotConfig.length;
+        const index = Math.min(slotConfig.length - 1, Math.max(0, Math.floor(ball.x / slotWidth)));
+        const slot = slotConfig[index];
+        const reward = Math.round(ball.power * slot.multiplier * 25);
+        state.xp += Math.round(reward / 40);
+        pushPayout(reward, ball.x, height - 110);
+      }
+
+      function updateBalls(deltaTime) {
+        const timeScale = deltaTime * state.dropSpeed;
+        for (const ball of balls) {
+          ball.vy += gravity * timeScale;
+          ball.x += ball.vx * timeScale;
+          ball.y += ball.vy * timeScale;
+
+          if (ball.x < ballRadius || ball.x > width - ballRadius) {
+            ball.vx *= -damping;
+            ball.x = Math.max(ballRadius, Math.min(width - ballRadius, ball.x));
+          }
+
+          if (ball.y > height - 110 && ball._scored !== true) {
+            handleSlotCollision(ball);
+            ball._scored = true;
+          }
+
+          for (const peg of pegs) {
+            const dx = ball.x - peg.x;
+            const dy = ball.y - peg.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < pegRadius + ballRadius) {
+              const angle = Math.atan2(dy, dx);
+              const speed = Math.max(2.6, Math.min(4.8, Math.hypot(ball.vx, ball.vy)));
+              ball.vx = Math.cos(angle) * speed;
+              ball.vy = Math.sin(angle) * speed;
+              ball.x = peg.x + Math.cos(angle) * (pegRadius + ballRadius + 0.1);
+              ball.y = peg.y + Math.sin(angle) * (pegRadius + ballRadius + 0.1);
+            }
+          }
+        }
+
+        for (let i = balls.length - 1; i >= 0; i--) {
+          if (balls[i].y > height + 80) {
+            balls.splice(i, 1);
+            updateBallCounter();
+          }
+        }
+      }
+
+      function updateFloatingTexts() {
+        for (const text of floatingTexts) {
+          text.life -= 1;
+          text.y -= 0.8;
+        }
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+          if (floatingTexts[i].life <= 0) {
+            floatingTexts.splice(i, 1);
+          }
+        }
+      }
+
+      function drawBackground() {
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.save();
+        roundRectPath(ctx, 6, 6, width - 12, height - 12, 26);
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
+        gradient.addColorStop(1, 'rgba(30, 64, 175, 0.85)');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = 'rgba(148, 163, 255, 0.2)';
+        for (let i = 0; i < 8; i++) {
+          const y = 160 + i * 55;
+          ctx.fillRect(40, y, width - 80, 2);
+        }
+        ctx.restore();
+      }
+
+      function drawFunnel() {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(96, 165, 250, 0.5)';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(56, 189, 248, 0.35)';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(width / 2 - 80, 40);
+        ctx.quadraticCurveTo(width / 2, -20, width / 2 + 80, 40);
+        ctx.lineTo(width / 2 + 48, 120);
+        ctx.quadraticCurveTo(width / 2, 140, width / 2 - 48, 120);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawPegs() {
+        ctx.save();
+        ctx.shadowColor = 'rgba(59, 130, 246, 0.45)';
+        ctx.shadowBlur = 10;
+        for (const peg of pegs) {
+          const gradient = ctx.createRadialGradient(peg.x - 1, peg.y - 2, 2, peg.x, peg.y, pegRadius);
+          gradient.addColorStop(0, '#f9fafb');
+          gradient.addColorStop(0.6, '#60a5fa');
+          gradient.addColorStop(1, '#1d4ed8');
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(peg.x, peg.y, pegRadius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawBalls() {
+        for (const ball of balls) {
+          const gradient = ctx.createRadialGradient(ball.x - 4, ball.y - 4, 2, ball.x, ball.y, ballRadius);
+          gradient.addColorStop(0, '#fff7ed');
+          gradient.addColorStop(0.6, `hsl(${ball.hue}, 85%, 64%)`);
+          gradient.addColorStop(1, `hsl(${ball.hue + 20}, 82%, 45%)`);
+          ctx.save();
+          ctx.shadowBlur = 14;
+          ctx.shadowColor = `hsla(${ball.hue}, 90%, 60%, 0.6)`;
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          ctx.save();
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.font = 'bold 12px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText(`x${ball.power}`, ball.x, ball.y + 4);
+          ctx.restore();
+        }
+      }
+
+      function drawSlotAreas() {
+        const slotWidth = width / slotConfig.length;
+        for (let i = 0; i < slotConfig.length; i++) {
+          const slot = slotConfig[i];
+          const x = i * slotWidth + 10;
+          const y = height - 120;
+          ctx.save();
+          roundRectPath(ctx, x, y, slotWidth - 20, 90, 18);
+          const gradient = ctx.createLinearGradient(0, y, 0, y + 90);
+          gradient.addColorStop(0, 'rgba(253, 224, 71, 0.28)');
+          gradient.addColorStop(1, 'rgba(234, 179, 8, 0.12)');
+          ctx.fillStyle = gradient;
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'rgba(253, 224, 71, 0.4)';
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.save();
+          ctx.font = 'bold 20px Inter';
+          ctx.fillStyle = '#fef08a';
+          ctx.textAlign = 'center';
+          ctx.fillText(`x${slot.multiplier}`, x + (slotWidth - 20) / 2, y + 40);
+          ctx.font = '600 13px Inter';
+          ctx.fillStyle = 'rgba(250, 204, 21, 0.75)';
+          ctx.fillText(slot.label, x + (slotWidth - 20) / 2, y + 64);
+          ctx.restore();
+        }
+      }
+
+      function drawFloatingTexts() {
+        for (const text of floatingTexts) {
+          const alpha = Math.max(0, text.life / 60);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = '#fde68a';
+          ctx.font = 'bold 16px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText(text.text, text.x, text.y);
+          ctx.restore();
+        }
+      }
+
+      let lastFrame = 0;
+
+      function loop(timestamp) {
+        if (!lastFrame) lastFrame = timestamp;
+        const delta = Math.min(2.5, (timestamp - lastFrame) / 16.67);
+        lastFrame = timestamp;
+
+        drawBackground();
+        drawFunnel();
+        drawPegs();
+        drawSlotAreas();
+        drawBalls();
+        drawFloatingTexts();
+
+        updateBalls(delta);
+        updateFloatingTexts();
+
+        if (state.autoDrop && timestamp - state.lastDrop > state.autoDropInterval / state.dropSpeed) {
+          spawnBall(120 + Math.random() * (width - 240));
+          state.lastDrop = timestamp;
+        }
+
+        requestAnimationFrame(loop);
+      }
+
+      const dropButton = document.getElementById('dropButton');
+      const mergeButton = document.getElementById('mergeButton');
+      const autoToggle = document.getElementById('autoToggle');
+
+      dropButton.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        manualDrop();
+      });
+
+      dropButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          manualDrop();
+        }
+      });
+
+      mergeButton.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        mergeTopBalls();
+      });
+
+      mergeButton.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          mergeTopBalls();
+        }
+      });
+
+      canvas.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * width;
+        manualDrop(x);
+      });
+
+      canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+
+      autoToggle.addEventListener('change', (event) => {
+        state.autoDrop = event.target.checked;
+      });
+
+      const speedRange = document.getElementById('speedRange');
+      speedRange.addEventListener('input', (event) => {
+        updateSpeed(event.target.value);
+      });
+
+      updateSpeed(speedRange.value);
+      updateSlotLabels();
+      updatePowerChips();
+      updateMissionUI();
+      updateScoreUI();
+      buildPegs();
+      state.lastDrop = performance.now() - state.autoDropInterval;
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>
